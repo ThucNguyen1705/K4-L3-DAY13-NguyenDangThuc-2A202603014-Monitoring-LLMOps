@@ -1,25 +1,45 @@
+# Ba alert dựa trên triệu chứng người dùng/SLO. Nguồn dữ liệu: data/logs.jsonl
+# (cùng log contract với config/dashboard.yaml). Mọi alert gửi Slack và có runbook.
 alerts:
-  - name: TODO_alert_1
-    severity: TODO
-    condition: TODO
-    duration: TODO
+  - name: high_latency_p95
+    severity: P2-high
+    summary: Người dùng chờ lâu - P95 latency vượt ngưỡng SLO 2000 ms
+    condition: 'percentile(latency_ms where event == "response_sent", 95) > 2000'
+    duration: 5m
+    evaluation_interval: 1m
     type: symptom-based
+    slo: fast_successful_requests
     channel: slack
-    owner: TODO
-    runbook: docs/alerts.md#alert-1
-  - name: TODO_alert_2
-    severity: TODO
-    condition: TODO
-    duration: TODO
+    slack_channel: "#day13-k4-l3a-alerts"
+    owner: llmops-oncall (Nguyễn Đăng Thực)
+    runbook: docs/alerts.md#alert-1-high_latency_p95
+
+  - name: high_error_rate
+    severity: P1-critical
+    summary: Người dùng nhận lỗi 500 - error rate > 2% hoặc retrieval success < 90%
+    condition: >-
+      count(event == "request_failed") / count(event == "request_received") * 100 > 2
+      or count(tool_success == true) / count(tool_success != null) * 100 < 90
+    duration: 5m
+    evaluation_interval: 1m
     type: symptom-based
+    slo: fast_successful_requests
     channel: slack
-    owner: TODO
-    runbook: docs/alerts.md#alert-2
-  - name: TODO_alert_3
-    severity: TODO
-    condition: TODO
-    duration: TODO
+    slack_channel: "#day13-k4-l3a-alerts"
+    owner: llmops-oncall (Nguyễn Đăng Thực)
+    runbook: docs/alerts.md#alert-2-high_error_rate
+
+  - name: cost_per_request_spike
+    severity: P3-warning
+    summary: Chi phí mỗi request tăng > 2.4 lần baseline, nguy cơ vượt ngân sách ngày
+    condition: >-
+      mean(cost_usd where event == "response_sent") > 0.005
+      or sum(cost_usd where event == "response_sent") over 24h > 2.5
+    duration: 15m
+    evaluation_interval: 5m
     type: symptom-based
+    guardrail: cost_per_request_usd_max, daily_cost_usd_max
     channel: slack
-    owner: TODO
-    runbook: docs/alerts.md#alert-3
+    slack_channel: "#day13-k4-l3a-alerts"
+    owner: llmops-oncall (Nguyễn Đăng Thực)
+    runbook: docs/alerts.md#alert-3-cost_per_request_spike

@@ -1,15 +1,42 @@
 service: day13-l3a-monitoring-llmops-lab
+owner: llmops-oncall (Nguyễn Đăng Thực - 2A202603014)
 primary_slo:
   name: fast_successful_requests
   window: 28d
   sli:
-    good_event: 'event == "response_sent" and latency_ms <= 3000'
+    # Request "tốt" = trả lời thành công VÀ nhanh hơn 2000 ms. Request lỗi không có
+    # response_sent nên tự động bị tính là "xấu".
+    good_event: 'event == "response_sent" and latency_ms <= 2000'
     total_event: 'event == "request_received"'
+  latency_threshold_ms: 2000
   target_percent: 99.5
   error_budget_percent: 0.5
-  note: Học viên phải giải thích hoặc điều chỉnh ngưỡng bằng baseline của mình.
+  rationale: >
+    Baseline đo trên máy lab (10 request, trước khi sửa code): latency server-side
+    P50 = P95 = 151 ms, P99 = 152 ms, TTFT P95 = 50 ms. Ngưỡng 3000 ms ban đầu gấp ~20 lần
+    baseline nên một sự cố retrieval chậm thêm 2.5 s (latency ~2.65 s) vẫn được tính là
+    "tốt" và không đốt error budget. Tôi siết ngưỡng SLI xuống 2000 ms: vẫn gấp >13 lần
+    baseline P95 (ít báo động giả, còn chỗ cho LLM thật chậm hơn fake LLM) nhưng bắt được
+    lỗi retrieval chậm. Đường 3000 ms trên dashboard giữ nguyên theo contract và đóng vai
+    trần cứng; đường SLO 2000 ms được vẽ thêm trên panel latency.
+  error_budget:
+    # 0.5% của mọi request trong 28 ngày được phép lỗi hoặc chậm hơn 2000 ms.
+    formula: 'budget_bad_requests = total_requests * (1 - 0.995)'
+    time_equivalent_minutes: 201.6 # 28 * 24 * 60 * 0.005
+    per_1000_requests: 5
+    burn_rate:
+      definition: 'bad_ratio_trong_cửa_sổ / 0.005'
+      fast_burn_page: 'burn_rate >= 14.4 trong 1h (tương đương bad_ratio >= 7.2%) -> đốt 2% budget/giờ'
+      slow_burn_ticket: 'burn_rate >= 6 trong 6h (tương đương bad_ratio >= 3%) -> đốt 5% budget/6 giờ'
+  policy:
+    - Budget còn > 50%: được release prompt/model version mới bình thường.
+    - Budget còn 0-50%: mỗi thay đổi prompt/model phải chạy canary với label candidate trước.
+    - Hết budget: đóng băng promote label production, chỉ cho phép rollback và fix độ tin cậy.
+  note: Ngưỡng được điều chỉnh bằng baseline cá nhân; xem submission/REPORT.md mục 6.
 guardrails:
   error_rate_pct_max: 2
   daily_cost_usd_max: 2.5
+  cost_per_request_usd_max: 0.005 # baseline trung bình ~0.0021 USD/request
   quality_score_avg_min: 0.75
   retrieval_success_rate_pct_min: 90
+  ttft_p95_ms_max: 1000

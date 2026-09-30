@@ -1,0 +1,61 @@
+# 13 - Incident log (lần chạy CP3 có tracing). Challenge ID: day13-k4-l3a-monitoring-llmops-v1 (K4-L3A, seed 1311, affected_feature=monitoring, latency_threshold_ms=2000)
+# Nguồn: data/logs.jsonl do API ghi. Incident bật lúc 2026-09-30T02:58:57Z (09:58:57 ICT) bằng scripts/inject_incident.py; tắt lúc 02:59:59Z.
+
+## So sánh theo phút cho feature monitoring (09:57 = cùng query khi chưa inject; 09:58 = challenge run)
+$ python scripts/investigate.py --since 3 --end 2026-09-30T02:59:39Z --feature monitoring --latency-ms 2000
+Cửa sổ: 2026-09-30 09:56:39 → 09:59:39 ICT (3 phút, 20 log records, feature=monitoring)
+Traffic: 10 requests | errors: 0 (0.0%) 
+Retrieval success: 100.0% | quality mean: 0.84
+Latency P50/P95/P99: 2653/2666/2666 ms | TTFT P95: 50 ms
+Cost: total $0.022785, avg $0.002279/request | tokens in/out: 350/1449
+
+Theo phút (chỉ phút có traffic):
+phút ICT   req fail  p95 ms ttft95     avg $ tok_out quality
+09:57        5    0     181     50  0.002238     711    0.84
+09:58        1    0       0      0  0.000000       0       -
+09:59        4    0    2666     50  0.002319     738    0.84
+
+Request bất thường: 5 (hiển thị tối đa 10)
+  2026-09-30T02:59:01.533715Z req-ca621f18 feature=monitoring event=response_sent latency_ms=2653 ttft_ms=50 cost_usd=0.002022 tokens_out=128 error_type=None
+  2026-09-30T02:59:04.190961Z req-d1b7ef67 feature=monitoring event=response_sent latency_ms=2653 ttft_ms=50 cost_usd=0.002103 tokens_out=133 error_type=None
+  2026-09-30T02:59:06.859351Z req-4ac8bee5 feature=monitoring event=response_sent latency_ms=2666 ttft_ms=50 cost_usd=0.002115 tokens_out=134 error_type=None
+  2026-09-30T02:59:09.515250Z req-a32ee7c1 feature=monitoring event=response_sent latency_ms=2653 ttft_ms=50 cost_usd=0.00267 tokens_out=171 error_type=None
+  2026-09-30T02:59:12.172282Z req-31726f43 feature=monitoring event=response_sent latency_ms=2653 ttft_ms=50 cost_usd=0.002685 tokens_out=172 error_type=None
+
+Bước tiếp theo: mở Langfuse → Traces, lọc Metadata correlation_id = <ID ở trên>, so sánh thời lượng/level của rag-retrieve và llm-generate.
+
+## Log line đầy đủ của request bất thường được chọn để tra trace
+$ python scripts/investigate.py --correlation-id req-ca621f18
+2026-09-30T02:58:58.878911Z {'service': 'api', 'payload': {'message_preview': 'How should an engineer investigate tail latency?'}, 'event': 'request_received', 'model': 'claude-sonnet-4-5', 'feature': 'monitoring', 'user_id_hash': 'aae0b94055a9', 'env': 'dev', 'correlation_id': 'req-ca621f18', 'session_id': 'k4-l3a-challenge-s02', 'level': 'info'}
+2026-09-30T02:59:01.533715Z {'service': 'api', 'latency_ms': 2653, 'ttft_ms': 50, 'tokens_in': 34, 'tokens_out': 128, 'cost_usd': 0.002022, 'quality_score': 0.9, 'tool_name': 'retrieval', 'tool_success': True, 'payload': {'answer_preview': 'Starter answer. You should improve this output logic and add better quality chec...'}, 'event': 'response_sent', 'model': 'claude-sonnet-4-5', 'feature': 'monitoring', 'user_id_hash': 'aae0b94055a9', 'env': 'dev', 'correlation_id': 'req-ca621f18', 'session_id': 'k4-l3a-challenge-s02', 'level': 'info'}
+
+## Raw JSON line trong data/logs.jsonl
+{"service": "api", "payload": {"message_preview": "How should an engineer investigate tail latency?"}, "event": "request_received", "model": "claude-sonnet-4-5", "feature": "monitoring", "user_id_hash": "aae0b94055a9", "env": "dev", "correlation_id": "req-ca621f18", "session_id": "k4-l3a-challenge-s02", "level": "info", "ts": "2026-09-30T02:58:58.878911Z"}
+{"service": "api", "latency_ms": 2653, "ttft_ms": 50, "tokens_in": 34, "tokens_out": 128, "cost_usd": 0.002022, "quality_score": 0.9, "tool_name": "retrieval", "tool_success": true, "payload": {"answer_preview": "Starter answer. You should improve this output logic and add better quality chec..."}, "event": "response_sent", "model": "claude-sonnet-4-5", "feature": "monitoring", "user_id_hash": "aae0b94055a9", "env": "dev", "correlation_id": "req-ca621f18", "session_id": "k4-l3a-challenge-s02", "level": "info", "ts": "2026-09-30T02:59:01.533715Z"}
+
+## Đối chứng: cùng session k4-l3a-challenge-s02 trước khi inject (req-d8ae8866)
+{"service": "api", "latency_ms": 181, "ttft_ms": 50, "tokens_in": 34, "tokens_out": 180, "cost_usd": 0.002802, "quality_score": 0.9, "tool_name": "retrieval", "tool_success": true, "payload": {"answer_preview": "Starter answer. You should improve this output logic and add better quality chec..."}, "event": "response_sent", "model": "claude-sonnet-4-5", "feature": "monitoring", "user_id_hash": "aae0b94055a9", "env": "dev", "correlation_id": "req-d8ae8866", "session_id": "k4-l3a-challenge-s02", "level": "info", "ts": "2026-09-30T02:57:58.849067Z"}
+
+## Phạm vi ảnh hưởng: mọi feature trong lúc incident
+$ python scripts/investigate.py --since 1 --end 2026-09-30T02:59:39Z --latency-ms 2000 --limit 0
+Cửa sổ: 2026-09-30 09:58:39 → 09:59:39 ICT (1 phút, 30 log records)
+Traffic: 15 requests | errors: 0 (0.0%) 
+Retrieval success: 100.0% | quality mean: 0.864
+Latency P50/P95/P99: 2653/2666/2666 ms | TTFT P95: 50 ms
+Cost: total $0.032265, avg $0.002305/request | tokens in/out: 485/2054
+Request bất thường: 14 (hiển thị tối đa 0)
+
+## Hồi phục sau mitigation (inject_incident.py --disable lúc 02:59:59Z, chạy lại cùng challenge queries)
+$ python scripts/investigate.py --since 1 --end 2026-09-30T03:00:02Z --feature monitoring --latency-ms 2000
+Cửa sổ: 2026-09-30 09:59:02 → 10:00:02 ICT (1 phút, 17 log records, feature=monitoring)
+Traffic: 8 requests | errors: 0 (0.0%) 
+Retrieval success: 100.0% | quality mean: 0.833
+Latency P50/P95/P99: 154/2666/2666 ms | TTFT P95: 50 ms
+Cost: total $0.021873, avg $0.002430/request | tokens in/out: 316/1395
+
+Theo phút (chỉ phút có traffic):
+phút ICT   req fail  p95 ms ttft95     avg $ tok_out quality
+09:59        3    0    2666     50  0.002393     610    0.82
+10:00        5    0     154     50  0.002460     785    0.84
+
+Request bất thường: 4 (hiển thị tối đa 10)

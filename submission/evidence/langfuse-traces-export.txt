@@ -1,0 +1,113 @@
+# Xuất trace thật từ Langfuse project day13-k4-l3a-2A202603014 (GET /api/public/v2/observations), nối với correlation_id trong data/logs.jsonl.
+# Field scope.* / resourceAttributes.* (chứa public key do SDK tự gắn) đã được lọc bỏ. Ảnh chụp giao diện Langfuse nằm ở các file 06-10, 14.
+# Mỗi pha restart API với LANGFUSE_PROMPT_LABEL tương ứng; promote production->v2 lúc 02:57:21Z, rollback production->v1 lúc 02:57:39Z.
+# Request đầu tiên sau mỗi lần restart có root ~1.0-1.6s vì fetch prompt từ Langfuse khi cache còn lạnh (retrieve/generate vẫn bình thường).
+
+Langfuse project traces (day13-agent-request) from 2026-09-30T02:51:38+00:00 to 2026-09-30T03:00:20.108137+00:00: 75
+
+## baseline (API LANGFUSE_PROMPT_LABEL=baseline, expect v1) 2026-09-30T02:51:48Z -> 2026-09-30T02:51:51Z: 10/10 traces
+  19a7063b9beab8b51c076980d5f36748  req-79cfef0d  prompt=day13-chat/baseline/v1 (langfuse)  root=1109ms retrieve=0ms generate=153ms
+  f389cd4ad2ab556423d268e9b978d429  req-cbc06987  prompt=day13-chat/baseline/v1 (langfuse)  root=154ms retrieve=2ms generate=151ms
+  59228523a81d1bc3fffc1d786847a9e5  req-ef88a06b  prompt=day13-chat/baseline/v1 (langfuse)  root=155ms retrieve=0ms generate=153ms
+  be8b91ca92978ae480ecc3016d80020f  req-f9f9ce4c  prompt=day13-chat/baseline/v1 (langfuse)  root=153ms retrieve=1ms generate=152ms
+  bbad1550f8c13fb5995e3aebf09ec6dc  req-d96cc4f0  prompt=day13-chat/baseline/v1 (langfuse)  root=153ms retrieve=0ms generate=151ms
+  c5eb1e409c15ab8f5d26bb1ba13a7e3c  req-b5197d17  prompt=day13-chat/baseline/v1 (langfuse)  root=153ms retrieve=1ms generate=152ms
+  82478f6c2f4555cec9a43f74c597d36a  req-05aaa265  prompt=day13-chat/baseline/v1 (langfuse)  root=154ms retrieve=0ms generate=153ms
+  f9fb15f2827780085d02f8bf8d2f4017  req-11819b15  prompt=day13-chat/baseline/v1 (langfuse)  root=153ms retrieve=0ms generate=152ms
+  de7006da56d3bb01c4f35c81a86d3ee1  req-0fc8f949  prompt=day13-chat/baseline/v1 (langfuse)  root=154ms retrieve=0ms generate=153ms
+  89bba0920df35ee01371b4ab903999fe  req-9cca0aeb  prompt=day13-chat/baseline/v1 (langfuse)  root=153ms retrieve=0ms generate=152ms
+
+## candidate (API LANGFUSE_PROMPT_LABEL=candidate, expect v2) 2026-09-30T02:51:59Z -> 2026-09-30T02:52:02Z: 10/10 traces
+  1af4a9f4b70b10f8eeb65e108e258d79  req-c5d9dbae  prompt=day13-chat/candidate/v2 (langfuse)  root=1072ms retrieve=0ms generate=152ms
+  12e7b45a84be6e183e230055310e0fad  req-6a3935a7  prompt=day13-chat/candidate/v2 (langfuse)  root=153ms retrieve=1ms generate=152ms
+  6b40cccdc986be656b63fecd378386b4  req-ca8be805  prompt=day13-chat/candidate/v2 (langfuse)  root=152ms retrieve=1ms generate=151ms
+  b87a5c7171b2988527821ad1264676a4  req-e9ce7dee  prompt=day13-chat/candidate/v2 (langfuse)  root=152ms retrieve=1ms generate=151ms
+  dd9f58563f972cabf19eaeca1f16de13  req-4d699417  prompt=day13-chat/candidate/v2 (langfuse)  root=153ms retrieve=1ms generate=152ms
+  685ce75f369d0c6239118e21346c8d2e  req-c579b6a5  prompt=day13-chat/candidate/v2 (langfuse)  root=153ms retrieve=0ms generate=152ms
+  c9e749776e9c026fd2361ae47572d8ff  req-19fea39e  prompt=day13-chat/candidate/v2 (langfuse)  root=153ms retrieve=0ms generate=152ms
+  ea2fea90f4dae8df03d13532b1418876  req-d6bdd509  prompt=day13-chat/candidate/v2 (langfuse)  root=153ms retrieve=1ms generate=152ms
+  981cadf74a5a30ecd6a2926410d1b21c  req-9543b77f  prompt=day13-chat/candidate/v2 (langfuse)  root=153ms retrieve=1ms generate=151ms
+  00d65f078828a8776f003e5324c32507  req-1cb2d702  prompt=day13-chat/candidate/v2 (langfuse)  root=152ms retrieve=0ms generate=151ms
+
+## production-v2 (API LANGFUSE_PROMPT_LABEL=production, expect v2) 2026-09-30T02:57:25Z -> 2026-09-30T02:57:29Z: 10/10 traces
+  0f244d2759c314d5c016d24d948d267b  req-98a38549  prompt=day13-chat/production/v2 (langfuse)  root=1597ms retrieve=1ms generate=152ms
+  d4e251bdbbf7952ea3cdf245cc949641  req-c350f30d  prompt=day13-chat/production/v2 (langfuse)  root=153ms retrieve=1ms generate=152ms
+  29c75a2d27eeaa4032fadbfcd08f074c  req-22a6f285  prompt=day13-chat/production/v2 (langfuse)  root=152ms retrieve=0ms generate=151ms
+  a8ada58e207f93596255418d1fd00097  req-188aa15e  prompt=day13-chat/production/v2 (langfuse)  root=152ms retrieve=1ms generate=151ms
+  b8f279965fd5e83aa29ca81d807758bc  req-310b0f2a  prompt=day13-chat/production/v2 (langfuse)  root=162ms retrieve=1ms generate=161ms
+  bea6eee36108423bc9d9d8fd818ff276  req-0beb9c20  prompt=day13-chat/production/v2 (langfuse)  root=153ms retrieve=0ms generate=151ms
+  65d5246c945fea3c56b54aec83fdf193  req-51284203  prompt=day13-chat/production/v2 (langfuse)  root=153ms retrieve=0ms generate=151ms
+  3f33b9d6a07d39761e053ad4b17bdcca  req-c4d06399  prompt=day13-chat/production/v2 (langfuse)  root=154ms retrieve=1ms generate=153ms
+  85053ecf437a8837db4666f71143fe35  req-2efd8268  prompt=day13-chat/production/v2 (langfuse)  root=153ms retrieve=0ms generate=151ms
+  88c01f2b980fa68fcbbe2323b4dc6666  req-ba016f0d  prompt=day13-chat/production/v2 (langfuse)  root=153ms retrieve=1ms generate=152ms
+
+## production-rollback-v1 (API LANGFUSE_PROMPT_LABEL=production, expect v1) 2026-09-30T02:57:41Z -> 2026-09-30T02:57:45Z: 10/10 traces
+  b48eb77f817b9f3f5421f8d41f59bc71  req-7ecc55d2  prompt=day13-chat/production/v1 (langfuse)  root=1000ms retrieve=1ms generate=152ms
+  44d49656129b4a968040179a953398a4  req-0ca495b4  prompt=day13-chat/production/v1 (langfuse)  root=153ms retrieve=0ms generate=151ms
+  8f47b8dd6a45b9d133af0bc08433ddc1  req-959a7535  prompt=day13-chat/production/v1 (langfuse)  root=152ms retrieve=1ms generate=151ms
+  ca9fc00614bf3cf745f7fd6a6e0ed5f3  req-d60ebaec  prompt=day13-chat/production/v1 (langfuse)  root=152ms retrieve=1ms generate=151ms
+  412445e1edc1b20a74567dec6a571177  req-92bf5c2b  prompt=day13-chat/production/v1 (langfuse)  root=153ms retrieve=1ms generate=152ms
+  0daca135d6de7a0e0b5d9794a3ca87d5  req-8c96b29a  prompt=day13-chat/production/v1 (langfuse)  root=154ms retrieve=1ms generate=153ms
+  686dc14dd05c738cffca023995f0a597  req-707bf066  prompt=day13-chat/production/v1 (langfuse)  root=160ms retrieve=0ms generate=159ms
+  cbfcb4aaf33aa9dc25d83a76e5ac963e  req-51e166c3  prompt=day13-chat/production/v1 (langfuse)  root=153ms retrieve=1ms generate=151ms
+  1fc294665884baac5db7f8c69979de4d  req-f1df663d  prompt=day13-chat/production/v1 (langfuse)  root=156ms retrieve=1ms generate=152ms
+  9a0803b6de7d0c17f796ff7bea968635  req-8bb38551  prompt=day13-chat/production/v1 (langfuse)  root=154ms retrieve=0ms generate=152ms
+
+## cp3 pre_challenge_ids: 5/5
+  a1fa0c269fe5ee4426d3ad17decd54de  req-cfb53906  prompt=day13-chat/production/v1 (langfuse)  root=154ms retrieve=1ms generate=152ms
+  e00164a1efdb84baa137cbb1b014c544  req-d8ae8866  prompt=day13-chat/production/v1 (langfuse)  root=182ms retrieve=2ms generate=179ms
+  0ee1242d59ddebbca143d13b2df71d95  req-297e794d  prompt=day13-chat/production/v1 (langfuse)  root=155ms retrieve=1ms generate=152ms
+  8bd53f71f8dccae517e237d156ff379f  req-16421bca  prompt=day13-chat/production/v1 (langfuse)  root=153ms retrieve=1ms generate=152ms
+  efad75225d31549b7dea0ae500060b79  req-d267ff9c  prompt=day13-chat/production/v1 (langfuse)  root=153ms retrieve=0ms generate=152ms
+
+## cp3 challenge_ids: 5/5
+  67daa54d749f9a18e73c532b28e3d734  req-ca621f18  prompt=day13-chat/production/v1 (langfuse)  root=2654ms retrieve=2502ms generate=152ms
+  5ec8430dea39cdd431fc38c80f67c681  req-d1b7ef67  prompt=day13-chat/production/v1 (langfuse)  root=2653ms retrieve=2501ms generate=151ms
+  0b7fe4f0700b797e1fa94402c655db72  req-a32ee7c1  prompt=day13-chat/production/v1 (langfuse)  root=2655ms retrieve=2501ms generate=152ms
+  130905be543a47545ab264ff3d0c96e1  req-4ac8bee5  prompt=day13-chat/production/v1 (langfuse)  root=2667ms retrieve=2512ms generate=152ms
+  20b147c7d6c8923f969d9204702a0ed3  req-31726f43  prompt=day13-chat/production/v1 (langfuse)  root=2654ms retrieve=2501ms generate=152ms
+
+## cp3 blast_ids: 10/10
+  26899df53fe2ee8941b80d9f46edcaf2  req-bbcb86f4  prompt=day13-chat/production/v1 (langfuse)  root=2654ms retrieve=2502ms generate=152ms
+  27c97bc677d7ad95cffc27aeaf1d1ce0  req-70afd731  prompt=day13-chat/production/v1 (langfuse)  root=2654ms retrieve=2501ms generate=152ms
+  079a6257480ac00af8c8a5a81b0cfbc3  req-e3e560ff  prompt=day13-chat/production/v1 (langfuse)  root=2654ms retrieve=2502ms generate=151ms
+  d441058ece620efceb8b7c08886ee4f3  req-9f86cea9  prompt=day13-chat/production/v1 (langfuse)  root=2653ms retrieve=2501ms generate=152ms
+  8b4d4cefc3d7080c6b4741e07ac11941  req-b3324653  prompt=day13-chat/production/v1 (langfuse)  root=2653ms retrieve=2501ms generate=152ms
+  18dfc9fe7a34524cf910b947f5453964  req-72a38454  prompt=day13-chat/production/v1 (langfuse)  root=2654ms retrieve=2501ms generate=152ms
+  ff6dd8c4b3fbc125b43e9996bde1ea21  req-5f99cce9  prompt=day13-chat/production/v1 (langfuse)  root=2654ms retrieve=2501ms generate=152ms
+  2c7ce28fe7182c16db4865f91a80bdab  req-bd62f4ac  prompt=day13-chat/production/v1 (langfuse)  root=2655ms retrieve=2501ms generate=152ms
+  36f99f953de140782031835d7b89e8b1  req-d7c8e4b9  prompt=day13-chat/production/v1 (langfuse)  root=2654ms retrieve=2501ms generate=151ms
+  b725bdc1afda2da354ec7a65928673fd  req-94c3a7aa  prompt=day13-chat/production/v1 (langfuse)  root=2654ms retrieve=2501ms generate=152ms
+
+## cp3 verify_ids: 5/5
+  8b83fa60e682ce3b6984707329327a6e  req-9c83dcef  prompt=day13-chat/production/v1 (langfuse)  root=152ms retrieve=0ms generate=151ms
+  8c2ddee2419dbe628a73cae6c1826ee0  req-d9c0c758  prompt=day13-chat/production/v1 (langfuse)  root=154ms retrieve=1ms generate=152ms
+  fa9a5fe91fc8e38e2790d5cef7af4965  req-9ddb3537  prompt=day13-chat/production/v1 (langfuse)  root=152ms retrieve=0ms generate=151ms
+  32fe520347f308a1802599c5bce26de3  req-3c3ae53a  prompt=day13-chat/production/v1 (langfuse)  root=155ms retrieve=1ms generate=151ms
+  de0cc6cd72fed3f24a0be8470d007795  req-e009580b  prompt=day13-chat/production/v1 (langfuse)  root=153ms retrieve=1ms generate=151ms
+
+## detail req-ca621f18
+trace_id=67daa54d749f9a18e73c532b28e3d734 name=day13-agent-request tags=['lab', 'monitoring', 'claude-sonnet-4-5'] user_id(hash)=aae0b94055a9 session_id=k4-l3a-challenge-s02 env=dev
+  trace/root metadata: {"correlation_id": "req-ca621f18", "model": "claude-sonnet-4-5", "feature": "monitoring", "prompt_fetch_error": "", "prompt_source": "langfuse", "prompt_version": 1, "prompt_label": "production", "prompt_name": "day13-chat", "query_preview": "How should an engineer investigate tail latency?", "doc_count": 1}
+  - lab-agent-run [AGENT] parent=(root) start=2026-09-30T02:58:58.879000+00:00 duration=2654ms level=DEFAULT
+  - rag-retrieve [RETRIEVER] parent=lab-agent-run start=2026-09-30T02:58:58.879000+00:00 duration=2502ms level=DEFAULT
+      input={"query_preview": "How should an engineer investigate tail latency?"}
+      output={"doc_count": 1, "docs": ["No domain document matched. Use general fallback answer."]}
+  - llm-generate [GENERATION] parent=lab-agent-run start=2026-09-30T02:59:01.381000+00:00 duration=152ms level=DEFAULT
+      model=claude-sonnet-4-5 usage={'input': 34, 'output': 128, 'total': 162} cost={'input': 0.000102, 'output': 0.00192, 'total': 0.002022} total_cost=0.002022
+      prompt=day13-chat v1 completion_start_time=2026-09-30 02:59:01.432000+00:00
+      input={"prompt_preview": "Feature=monitoring Docs=No domain document matched. Use general fallback answer. Question=How should an engineer investigate tail latency?"}
+      output={"answer_preview": "Starter answer. You should improve this output logic and add better quality chec..."}
+
+## detail req-cfb53906
+trace_id=a1fa0c269fe5ee4426d3ad17decd54de name=day13-agent-request tags=['lab', 'monitoring', 'claude-sonnet-4-5'] user_id(hash)=dde2e75b20cf session_id=k4-l3a-challenge-s01 env=dev
+  trace/root metadata: {"correlation_id": "req-cfb53906", "model": "claude-sonnet-4-5", "feature": "monitoring", "prompt_fetch_error": "", "prompt_source": "langfuse", "prompt_version": 1, "prompt_label": "production", "prompt_name": "day13-chat", "query_preview": "Explain why metrics traces and logs work together.", "doc_count": 1}
+  - lab-agent-run [AGENT] parent=(root) start=2026-09-30T02:57:58.505000+00:00 duration=154ms level=DEFAULT
+  - rag-retrieve [RETRIEVER] parent=lab-agent-run start=2026-09-30T02:57:58.505000+00:00 duration=1ms level=DEFAULT
+      input={"query_preview": "Explain why metrics traces and logs work together."}
+      output={"doc_count": 1, "docs": ["No domain document matched. Use general fallback answer."]}
+  - llm-generate [GENERATION] parent=lab-agent-run start=2026-09-30T02:57:58.506000+00:00 duration=152ms level=DEFAULT
+      model=claude-sonnet-4-5 usage={'input': 35, 'output': 165, 'total': 200} cost={'input': 0.000105, 'output': 0.002475, 'total': 0.00258} total_cost=0.00258
+      prompt=day13-chat v1 completion_start_time=2026-09-30 02:57:58.557000+00:00
+      input={"prompt_preview": "Feature=monitoring Docs=No domain document matched. Use general fallback answer. Question=Explain why metrics traces and logs work together."}
+      output={"answer_preview": "Starter answer. You should improve this output logic and add better quality chec..."}

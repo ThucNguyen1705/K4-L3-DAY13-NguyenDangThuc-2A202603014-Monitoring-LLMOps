@@ -1,0 +1,18 @@
+# 05 - PII redaction (runtime). Input chứa PII GIẢ (dữ liệu test), gửi qua API thật đang chạy.
+# Request 1: x-request-id: req-0badc0de
+#   message = "Refund for student@vinuni.edu.vn, phone 090 123 4567, CCCD 001099012345, card 4111 1111 1111 1111, passport C1234567"
+# Request 2: x-request-id: req-0c0ffee1
+#   message = "Card 4111 1111 1111 1111 and passport C1234567, CCCD 079201000123, call +84 90 123 4567"
+
+# Log thực tế trong data/logs.jsonl (event request_received) của hai request trên:
+{"service": "api", "payload": {"message_preview": "Refund for [REDACTED_EMAIL], phone [REDACTED_PHONE_VN], CCCD [REDACTED_CCCD], ca..."}, "event": "request_received", "correlation_id": "req-0badc0de", "model": "claude-sonnet-4-5", "session_id": "s_pii_demo", "user_id_hash": "a6db59df9c3e", "env": "dev", "feature": "qa", "level": "info", "ts": "2026-09-29T15:15:20.619248Z"}
+{"service": "api", "payload": {"message_preview": "Card [REDACTED_CREDIT_CARD] and passport [REDACTED_PASSPORT_VN], CCCD [REDACTED_..."}, "event": "request_received", "correlation_id": "req-0c0ffee1", "model": "claude-sonnet-4-5", "session_id": "s_pii_demo", "user_id_hash": "a6db59df9c3e", "env": "dev", "feature": "qa", "level": "info", "ts": "2026-09-29T15:15:45.134831Z"}
+
+# Đếm chuỗi PII thô trong toàn bộ data/logs.jsonl (0 = không còn):
+  student@vinuni.edu.vn    0
+  090 123 4567             0
+  +84 90 123 4567          0
+  001099012345             0
+  079201000123             0
+  4111 1111 1111 1111      0
+  C1234567                 0

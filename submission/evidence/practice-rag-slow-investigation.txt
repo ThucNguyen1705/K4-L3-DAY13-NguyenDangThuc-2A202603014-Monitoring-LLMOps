@@ -1,0 +1,42 @@
+# PRACTICE (không phải challenge chính thức): python scripts/inject_incident.py --scenario rag_slow
+# rồi python scripts/load_test.py --concurrency 5 lúc 15:17:03Z (22:17:03 ICT), sau đó --disable.
+
+## Bước 1 - Metrics: tóm tắt 60 phút và bảng theo phút để khoanh khoảng sự cố
+$ python scripts/investigate.py --since 60 --latency-ms 2000
+Cửa sổ: 2026-09-29 21:21:21 → 22:21:21 ICT (60 phút, 175 log records)
+Traffic: 84 requests | errors: 10 (11.9%) {'RuntimeError': 10}
+Retrieval success: 88.1% | quality mean: 0.876
+Latency P50/P95/P99: 153/2654/2675 ms | TTFT P95: 51 ms
+Cost: total $0.216462, avg $0.002925/request | tokens in/out: 2524/13926
+
+Theo phút (chỉ phút có traffic):
+phút ICT   req fail  p95 ms ttft95     avg $ tok_out quality
+22:15        4    0     153     50  0.002402     609    0.80
+22:16       20    0     153     51  0.002231    2839    0.88
+22:17       10    0    2675     53  0.002087    1324    0.88
+22:18       10    0     166     51  0.002236    1423    0.88
+22:19       10   10       0      0  0.000000       0       -
+22:20       10    0     173     52  0.007727    5084    0.88
+22:21       20    0     183     53  0.002087    2647    0.88
+
+Request bất thường: 10 (hiển thị tối đa 3)
+  2026-09-29T15:17:07.842226Z req-3dea41cc feature=qa event=response_sent latency_ms=2653 ttft_ms=51 cost_usd=0.002541 tokens_out=163 error_type=None
+  2026-09-29T15:17:10.520274Z req-c30184a4 feature=qa event=response_sent latency_ms=2675 ttft_ms=50 cost_usd=0.002127 tokens_out=134 error_type=None
+  2026-09-29T15:17:13.194157Z req-27673dbd feature=qa event=response_sent latency_ms=2670 ttft_ms=50 cost_usd=0.002184 tokens_out=139 error_type=None
+
+Bước tiếp theo: mở Langfuse → Traces, lọc Metadata correlation_id = <ID ở trên>, so sánh thời lượng/level của rag-retrieve và llm-generate.
+
+## Bước 2 - Logs: toàn bộ log line của một request chậm
+$ python scripts/investigate.py --correlation-id req-3dea41cc
+2026-09-29T15:17:05.187821Z {'service': 'api', 'payload': {'message_preview': 'Explain why metrics traces and logs work together'}, 'event': 'request_received', 'correlation_id': 'req-3dea41cc', 'model': 'claude-sonnet-4-5', 'session_id': 's02', 'user_id_hash': '95b6504a8bd6', 'env': 'dev', 'feature': 'qa', 'level': 'info'}
+2026-09-29T15:17:07.842226Z {'service': 'api', 'latency_ms': 2653, 'ttft_ms': 51, 'tokens_in': 32, 'tokens_out': 163, 'cost_usd': 0.002541, 'quality_score': 0.8, 'tool_name': 'retrieval', 'tool_success': True, 'payload': {'answer_preview': 'Starter answer. You should improve this output logic and add better quality chec...'}, 'event': 'response_sent', 'correlation_id': 'req-3dea41cc', 'model': 'claude-sonnet-4-5', 'session_id': 's02', 'user_id_hash': '95b6504a8bd6', 'env': 'dev', 'feature': 'qa', 'level': 'info'}
+
+## Đối chứng: cùng công cụ cho practice tool_fail và cost_spike
+$ python scripts/investigate.py --since 60 --failed --cost-usd 0.005 --limit 4
+Request bất thường: 20 (hiển thị tối đa 4)
+  2026-09-29T15:19:21.794616Z req-ad4ef05f feature=qa event=request_failed latency_ms=None ttft_ms=None cost_usd=None tokens_out=None error_type=RuntimeError
+  2026-09-29T15:19:21.797569Z req-e66aba3b feature=summary event=request_failed latency_ms=None ttft_ms=None cost_usd=None tokens_out=None error_type=RuntimeError
+  2026-09-29T15:19:21.799429Z req-83d5cd46 feature=qa event=request_failed latency_ms=None ttft_ms=None cost_usd=None tokens_out=None error_type=RuntimeError
+  2026-09-29T15:19:21.802274Z req-623cc52d feature=qa event=request_failed latency_ms=None ttft_ms=None cost_usd=None tokens_out=None error_type=RuntimeError
+
+Bước tiếp theo: mở Langfuse → Traces, lọc Metadata correlation_id = <ID ở trên>, so sánh thời lượng/level của rag-retrieve và llm-generate.

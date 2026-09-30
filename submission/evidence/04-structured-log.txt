@@ -1,0 +1,13 @@
+# 04 - Structured log (trích data/logs.jsonl, mỗi dòng là một JSON record do structlog ghi)
+# Một request thành công (correlation_id sinh bởi middleware), cùng correlation_id ở cả hai dòng:
+{"service": "api", "payload": {"message_preview": "What is your refund policy? My email is [REDACTED_EMAIL]"}, "event": "request_received", "correlation_id": "req-efc35f90", "model": "claude-sonnet-4-5", "session_id": "s01", "user_id_hash": "2055254ee30a", "env": "dev", "feature": "qa", "level": "info", "ts": "2026-09-29T15:16:04.724779Z"}
+{"service": "api", "latency_ms": 152, "ttft_ms": 50, "tokens_in": 36, "tokens_out": 121, "cost_usd": 0.001923, "quality_score": 0.9, "tool_name": "retrieval", "tool_success": true, "payload": {"answer_preview": "Starter answer. You should improve this output logic and add better quality chec..."}, "event": "response_sent", "correlation_id": "req-efc35f90", "model": "claude-sonnet-4-5", "session_id": "s01", "user_id_hash": "2055254ee30a", "env": "dev", "feature": "qa", "level": "info", "ts": "2026-09-29T15:16:04.878466Z"}
+
+# Một request lỗi trong practice tool_fail (vẫn có đủ correlation_id + metadata):
+{"service": "api", "error_type": "RuntimeError", "tool_name": "retrieval", "tool_success": false, "payload": {"detail": "Vector store timeout", "message_preview": "What is your refund policy? My email is [REDACTED_EMAIL]"}, "event": "request_failed", "correlation_id": "req-ad4ef05f", "model": "claude-sonnet-4-5", "session_id": "s01", "user_id_hash": "2055254ee30a", "env": "dev", "feature": "qa", "level": "error", "ts": "2026-09-29T15:19:21.794616Z"}
+
+# Response header của API cho request có x-request-id hợp lệ / không có / không hợp lệ (0987654321):
+  x-request-id: req-0badc0de   (giữ nguyên ID client gửi)
+  x-request-id: req-286a95fd   (không gửi header -> sinh mới)
+  x-request-id: req-4dc7feb6   (header không đúng format req-<8-hex> -> sinh mới, không log giá trị client gửi)
+  x-response-time-ms có trong mọi response

@@ -3,12 +3,16 @@ from __future__ import annotations
 import hashlib
 import re
 
+# Thứ tự có ý nghĩa: chuỗi số dài (thẻ) được che trước để phone/CCCD không che mất một phần.
 PII_PATTERNS: dict[str, str] = {
-    "email": r"[\w\.-]+@[\w\.-]+\.\w+",
-    "phone_vn": r"(?<!\d)(?:\+84|0)(?:[ .-]?\d){9}(?!\d)",
+    "email": r"[\w.+-]+@[\w.-]+\.\w+",
+    # Visa/Master 16 số (4-4-4-4) và Amex 15 số (4-6-5), cho phép dấu cách hoặc gạch.
+    "credit_card": r"\b(?:\d{4}[- ]?){3}\d{4}\b|\b\d{4}[- ]?\d{6}[- ]?\d{5}\b",
+    # 0xxxxxxxxx, +84/84/(+84) + 9 số, cho phép dấu cách, chấm hoặc gạch giữa các số.
+    "phone_vn": r"(?<![\d+])(?:\(?\+?84\)?|0)(?:[ .-]?\d){9}(?!\d)",
     "cccd": r"\b\d{12}\b",
-    "credit_card": r"\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b",
-    # TODO: Add more patterns (e.g., Passport, Vietnamese address keywords)
+    # Hộ chiếu Việt Nam: 1 chữ in hoa + 7 số, ví dụ C1234567.
+    "passport_vn": r"\b[A-Z]\d{7}\b",
 }
 
 
